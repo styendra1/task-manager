@@ -30,22 +30,34 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'user_id' => 'required|exists:users,id',
-            'status' => 'required|in:Pending,In Progress,Completed',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'user_id' => 'required|exists:users,id',
+        'status' => 'required|in:Pending,In Progress,Completed',
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after_or_equal:start_date',
+    ]);
 
-        // Create the task
-        Task::create($request->all());
+    // Set user_id based on role
+    $userId = auth()->user()->role === 'admin'
+        ? $request->user_id
+        : auth()->id();
 
-        return redirect()->route('tasks.index')->with('success', 'Task created successfully.');
-    }
+    Task::create([
+        'title' => $request->title,
+        'description' => $request->description,
+        'user_id' => $userId,
+        'status' => $request->status,
+        'start_date' => $request->start_date,
+        'end_date' => $request->end_date,
+    ]);
+
+    return redirect()->route('tasks.index')->with('success', 'Task created successfully.');
+}
+
 
     /**
      * Display the specified resource.
